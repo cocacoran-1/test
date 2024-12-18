@@ -9,8 +9,14 @@
         body {
             font-family: 'Noto Sans KR', sans-serif;
         }
-        .monospace {
-            font-family: 'Courier New', Courier, monospace; /* 고정 너비 폰트 */
+        .nickname {
+            display: inline-block;
+            width: 200px; /* 고정된 너비 */
+            text-align: left; /* 왼쪽 정렬 */
+            overflow-wrap: break-word; /* 긴 텍스트 줄바꿈 처리 */
+            white-space: nowrap; /* 줄바꿈 방지 */
+            overflow: hidden; /* 텍스트가 넘칠 경우 숨김 */
+            text-overflow: ellipsis; /* 넘치는 텍스트에 ... 표시 */
         }
     </style>
 </head>
@@ -21,9 +27,9 @@
             {% for team in teams %}
             <div class="bg-white p-4 rounded shadow">
                 <h2 class="font-bold text-lg mb-4 text-center">팀 {{ loop.index }}</h2>
-                <ul class="list-disc list-inside">
+                <ul class="list-none">
                     {% for member in team %}
-                    <li class="monospace text-left">{{ member }}</li>
+                    <li class="nickname">{{ member }}</li>
                     {% endfor %}
                 </ul>
             </div>
