@@ -9,25 +9,27 @@
         body {
             font-family: 'Noto Sans KR', sans-serif;
         }
+        .monospace {
+            font-family: 'Courier New', Courier, monospace; /* 고정 너비 폰트 */
+        }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body class="bg-gray-100 text-gray-900">
     <div class="container mx-auto p-6">
-        <h1 class="text-2xl font-bold mb-8">팀 구성 결과</h1>
-        <div class="grid grid-cols-2 gap-4">
+        <h1 class="text-2xl font-bold mb-8 text-center">팀 구성 결과</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {% for team in teams %}
-            <div>
-                <h2 class="font-bold mb-2">{{ loop.index }}팀</h2>
-                <div class="flex space-x-2">
+            <div class="bg-white p-4 rounded shadow">
+                <h2 class="font-bold text-lg mb-4 text-center">팀 {{ loop.index }}</h2>
+                <ul class="list-disc list-inside">
                     {% for member in team %}
-                    <div class="border border-gray-300 rounded p-4 bg-white">{{ member }}</div>
+                    <li class="monospace text-left">{{ member }}</li>
                     {% endfor %}
-                </div>
+                </ul>
             </div>
-            {% endfor %}            
+            {% endfor %}
         </div>
-        <div class="mt-8">
+        <div class="mt-8 text-center">
             <a href="{{ url_for('home') }}" class="bg-blue-500 text-white px-4 py-2 rounded">처음으로</a>
         </div>
     </div>
