@@ -8,14 +8,59 @@
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            transition: opacity 0.5s ease; /* 페이드 효과 */
+            opacity: 0; /* 초기 상태 */
+            transition: opacity 1s ease; /* 페이드인 효과 */
         }
-        body.fade-out {
-            opacity: 0; /* 페이드아웃 효과 */
+        body.fade-in {
+            opacity: 1; /* 페이드인 */
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8); /* 어두운 배경 */
+            z-index: 50;
+            display: none;
+        }
+        .overlay.show {
+            display: block; /* 오버레이 표시 */
+        }
+        .image-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            aspect-ratio: 1;
+        }
+        .image-container img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center; /* 중앙 정렬 */
+            opacity: 0;
+            transition: opacity 1s ease; /* 부드러운 페이드인 */
+        }
+        .image-container img.visible {
+            opacity: 1; /* 현재 표시 중인 이미지 */
+        }
+        .center-image {
+            position: absolute;
+            top: 70%;
+            left: 55%;
+            transform: translate(-50%, 5%);
+            width: 1000px; /* 중앙 이미지 크기 */
+            z-index: 10; /* 다른 요소 아래 */
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
+<body class="bg-gray-100 text-gray-900 relative">
+    <!-- 화면 내용 -->
+    <img src="{{ url_for('static', filename='images/page_center_image.png') }}" alt="기본 중앙 이미지" class="center-image">
     <div class="container mx-auto p-6">
         <header class="flex justify-between items-center mb-8">
             <h1 class="text-2xl font-bold">유세라배 크리스마스 이리 서바이벌</h1>
@@ -31,14 +76,33 @@
         </header>
     </div>
 
+    <!-- 페이드아웃 오버레이 -->
+    <div class="overlay">
+        <div class="image-container">
+            <img src="{{ url_for('static', filename='images/final_image.png') }}" alt="최종 이미지" id="finalImage">
+        </div>
+    </div>
+
     <script>
-        // 페이지 전환 시 페이드아웃 효과 추가
-        document.querySelector('form').addEventListener('submit', function(event) {
+        // 페이지 로딩 시 페이드인 효과
+        document.addEventListener('DOMContentLoaded', function () {
+            document.body.classList.add('fade-in');
+        });
+
+        // 추첨하기 클릭 시
+        document.querySelector('form').addEventListener('submit', function (event) {
             event.preventDefault(); // 기본 동작 방지
-            document.body.classList.add('fade-out'); // 페이드아웃 효과 추가
+
+            const overlay = document.querySelector('.overlay');
+            const finalImage = document.getElementById('finalImage');
+
+            overlay.classList.add('show'); // 오버레이 표시
+            finalImage.classList.add('visible'); // 최종 이미지 표시
+
+            // 1초 후 폼 제출
             setTimeout(() => {
-                this.submit(); // 원래의 form 동작 수행
-            }, 500); // 페이드아웃 시간(0.5초) 후 페이지 전환
+                this.submit();
+            }, 1500); // 이미지 표시 후 1.5초 대기
         });
     </script>
 </body>
