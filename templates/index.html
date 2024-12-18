@@ -8,42 +8,38 @@
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
+            transition: opacity 0.5s ease; /* 페이드 효과 */
+        }
+        body.fade-out {
+            opacity: 0; /* 페이드아웃 효과 */
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body class="bg-gray-100 text-gray-900">
     <div class="container mx-auto p-6">
         <header class="flex justify-between items-center mb-8">
-            <div class="flex items-center space-x-4">
-                <img src="{{ url_for('static', filename='images/sera.png') }}" alt="크리스마스 이미지" class="w-16 h-16 object-contain">
-                <h1 class="text-2xl font-bold">유세라배 크리스마스 이리 서바이벌</h1>
-            </div>
-            <form action="{{ url_for('generate_teams') }}" method="POST" class="flex items-center space-x-2">
+            <h1 class="text-2xl font-bold">유세라배 크리스마스 이리 서바이벌</h1>
+            <form action="{{ url_for('generate_teams') }}" method="POST" class="flex items-center space-x-4">
                 <span>카테고리</span>
                 <select name="category" class="border border-gray-300 rounded p-1">
                     {% for cat in category_list %}
                     <option value="{{ cat }}">{{ cat }}</option>
                     {% endfor %}
                 </select>
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">추첨하기</button>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded transition hover:bg-blue-600">추첨하기</button>
             </form>
         </header>
-        <main>
-            <h2 class="text-xl font-bold mb-4">현재 카테고리 목록</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {% for cat, nicks in categories.items() %}
-                <div class="bg-white p-4 rounded shadow">
-                    <h3 class="font-bold mb-2">{{ cat }}</h3>
-                    <ul class="list-disc list-inside">
-                        {% for nick in nicks %}
-                        <li>{{ nick }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endfor %}
-            </div>
-        </main>
     </div>
+
+    <script>
+        // 페이지 전환 시 페이드아웃 효과 추가
+        document.querySelector('form').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 동작 방지
+            document.body.classList.add('fade-out'); // 페이드아웃 효과 추가
+            setTimeout(() => {
+                this.submit(); // 원래의 form 동작 수행
+            }, 500); // 페이드아웃 시간(0.5초) 후 페이지 전환
+        });
+    </script>
 </body>
 </html>
