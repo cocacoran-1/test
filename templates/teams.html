@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팀 구성 결과</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div class="container mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-8">팀 구성 결과</h1>
+        <div class="grid grid-cols-2 gap-4">
+            {% for team in teams %}
+            <div>
+                <h2 class="font-bold mb-2">{{ loop.index }}팀</h2>
+                <div class="flex space-x-2">
+                    {% for member in team %}
+                    <div class="border border-gray-300 rounded p-4 bg-white">{{ member }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}            
+        </div>
+        <div class="mt-8">
+            <a href="{{ url_for('home') }}" class="bg-blue-500 text-white px-4 py-2 rounded">처음으로</a>
+        </div>
+    </div>
+</body>
+</html>
