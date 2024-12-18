@@ -27,18 +27,26 @@ def generate_teams():
 
     # 팀 당 인원 수 설정
     team_size = 3
-    num_teams = n // team_size
-    remainder = n % team_size
+    max_teams = 8
+
+    if n >= team_size * max_teams:
+        # 정확히 24명을 선택하여 8팀 생성
+        selected_people = random.sample(chosen_nicknames, team_size * max_teams)
+        num_teams = max_teams
+    else:
+        # 가능한 만큼 팀 생성
+        selected_people = random.sample(chosen_nicknames, n)
+        num_teams = n // team_size
 
     # 참가자 무작위로 섞기
-    selected_people = random.sample(chosen_nicknames, n)
     random.shuffle(selected_people)
 
     # 팀 생성
     teams = [selected_people[i*team_size:(i+1)*team_size] for i in range(num_teams)]
 
     # 나머지 참가자 처리 (반드시 팀에 포함)
-    if remainder != 0:
+    remainder = len(selected_people) % team_size
+    if remainder != 0 and n >= team_size * max_teams:
         for i in range(remainder):
             teams[i % num_teams].append(selected_people[num_teams*team_size + i])
 
