@@ -21,12 +21,26 @@ def generate_teams():
     # 선택한 카테고리의 닉네임들을 가져오기
     chosen_nicknames = categories.get(selected_category, [])
 
-    if len(chosen_nicknames) < 24:
-        return "Not enough nicknames in this category to generate 8 teams!", 400
+    n = len(chosen_nicknames)
+    if n < 3:
+        return "팀을 생성할 충분한 인원이 없습니다!", 400
 
-    selected_people = random.sample(chosen_nicknames, 24)
+    # 팀 당 인원 수 설정
+    team_size = 3
+    num_teams = n // team_size
+    remainder = n % team_size
+
+    # 참가자 무작위로 섞기
+    selected_people = random.sample(chosen_nicknames, n)
     random.shuffle(selected_people)
-    teams = [selected_people[i:i + 3] for i in range(0, 24, 3)]
+
+    # 팀 생성
+    teams = [selected_people[i*team_size:(i+1)*team_size] for i in range(num_teams)]
+
+    # 나머지 참가자 처리 (반드시 팀에 포함)
+    if remainder != 0:
+        for i in range(remainder):
+            teams[i % num_teams].append(selected_people[num_teams*team_size + i])
 
     return render_template('teams.html', teams=teams)
 
