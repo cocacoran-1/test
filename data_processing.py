@@ -155,6 +155,7 @@ data = """
 참여 3번 / 이세돌막내비챤
 참여 1번 / 대가25
 참여 2번 / 어둠의이리단
+
 """
 
 lines = [line.strip() for line in data.split('\n') if line.strip()]
