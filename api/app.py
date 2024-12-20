@@ -67,5 +67,59 @@ def generate_teams():
 
     return render_template('teams.html', teams=teams, selected_category=selected_category)
 
+@app.route('/add_data', methods=['POST'])
+def add_data():
+    """
+    선택된 카테고리에 닉네임 추가
+    """
+    global categories  # 전역 변수 업데이트를 위해 global 사용
+    category = request.form.get('category')  # 선택된 카테고리
+    nicknames = request.form.get('nicknames')  # 입력된 닉네임들
+
+    # 닉네임들을 "/" 기준으로 분리
+    nickname_list = [name.strip() for name in nicknames.split('/') if name.strip()]
+
+    # 선택된 카테고리에 추가
+    if category in categories:
+        categories[category].extend(nickname_list)
+
+        # 중복 제거
+        categories[category] = list(set(categories[category]))
+
+        # JSON 파일 업데이트
+        with open(JSON_PATH, 'w', encoding='utf-8') as f:
+            json.dump(categories, f, ensure_ascii=False, indent=2)
+
+        # JSON 파일을 다시 읽어 categories 변수 업데이트
+        categories = load_categories()
+
+        return redirect(url_for('home'))  # 메인 페이지로 리디렉션
+    else:
+        return "잘못된 카테고리 선택", 400
+    
+@app.route('/delete_data', methods=['POST'])
+def delete_data():
+    """
+    선택된 닉네임 삭제
+    """
+    global categories
+    category = request.form.get('category')
+    nickname = request.form.get('nickname')
+
+    if category in categories and nickname in categories[category]:
+        categories[category].remove(nickname)
+
+        # JSON 파일 업데이트
+        with open(JSON_PATH, 'w', encoding='utf-8') as f:
+            json.dump(categories, f, ensure_ascii=False, indent=2)
+
+        # JSON 파일 다시 로드
+        categories = load_categories()
+
+        return redirect(url_for('home'))
+    else:
+        return "잘못된 요청입니다.", 400
+
+
 if __name__ == '__main__':
     app.run(debug=True)

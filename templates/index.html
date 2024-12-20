@@ -60,12 +60,23 @@
             border-radius: 4px;
         }
         .nickname {
+            position: relative;
             margin: 0.5rem 0;
             display: block;
             background: #e2e8f0;
             border-radius: 4px;
             padding: 0.5rem;
             font-size: 0.875rem;
+        }
+        .nickname .delete-button {
+            position: absolute;
+            top: 0.2rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: #f00;
+            font-size: 0.8rem;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -91,10 +102,46 @@
             <div class="category">
                 <h2>{{ category }} <span class="text-sm text-gray-600">({{ nicknames|length }}명)</span></h2>
                 {% for nickname in nicknames %}
-                <span class="nickname">{{ nickname }}</span>
+                <div class="nickname">
+                    {{ nickname }}
+                    <!-- 삭제 버튼 -->
+                    <form action="{{ url_for('delete_data') }}" method="POST" class="inline">
+                        <input type="hidden" name="category" value="{{ category }}">
+                        <input type="hidden" name="nickname" value="{{ nickname }}">
+                        <button type="submit" class="delete-button">X</button>
+                    </form>
+                </div>
                 {% endfor %}
             </div>
             {% endfor %}
+        </div>
+
+        <!-- 데이터 추가 폼 -->
+        <div class="mt-8">
+            <h2 class="text-xl font-bold mb-4">데이터 추가하기</h2>
+            <form action="{{ url_for('add_data') }}" method="POST" class="space-y-4">
+                <!-- 카테고리 선택 -->
+                <div>
+                    <label for="category" class="block text-sm font-medium">카테고리 선택</label>
+                    <select name="category" id="category" class="border border-gray-300 rounded p-2 w-full">
+                        {% for cat in category_list %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- 닉네임 입력 -->
+                <div>
+                    <label for="nicknames" class="block text-sm font-medium">닉네임 입력</label>
+                    <input type="text" name="nicknames" id="nicknames" placeholder="닉네임 또는 닉네임1/닉네임2 형식으로 입력"
+                           class="border border-gray-300 rounded p-2 w-full">
+                </div>
+
+                <!-- 추가 버튼 -->
+                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    추가하기
+                </button>
+            </form>
         </div>
     </div>
 
@@ -112,7 +159,7 @@
         });
 
         // 추첨하기 클릭 시
-        document.querySelector('form').addEventListener('submit', function (event) {
+        document.querySelector('form[action="/generate_teams"]').addEventListener('submit', function (event) {
             event.preventDefault(); // 기본 동작 방지
 
             const overlay = document.querySelector('.overlay');
