@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import random
 import json
 import os
@@ -27,8 +27,20 @@ def home():
     """
     메인 페이지: 카테고리와 데이터를 전달
     """
-    category_list = list(categories.keys())  # ["1번", "2번", "3번"]
-    return render_template('index.html', categories=categories, category_list=category_list)
+    # 각 카테고리의 닉네임을 정렬
+    sorted_categories = {category: sorted(nicknames) for category, nicknames in categories.items()}
+    category_list = list(categories.keys())
+
+    # 전체 참가자 수 계산
+    total_participants = sum(len(nicknames) for nicknames in categories.values())
+
+    return render_template(
+        'index.html',
+        categories=sorted_categories,
+        category_list=category_list,
+        total_participants=total_participants
+    )
+
 
 @app.route('/generate_teams', methods=['POST'])
 def generate_teams():
@@ -69,33 +81,39 @@ def generate_teams():
 
 @app.route('/add_data', methods=['POST'])
 def add_data():
-    """
-    선택된 카테고리에 닉네임 추가
-    """
-    global categories  # 전역 변수 업데이트를 위해 global 사용
-    category = request.form.get('category')  # 선택된 카테고리
-    nicknames = request.form.get('nicknames')  # 입력된 닉네임들
+    global categories
 
-    # 닉네임들을 "/" 기준으로 분리
+    # 요청 데이터 디버그 출력
+    print("요청 데이터:", request.form)
+
+    category = request.form.get('category')
+    nicknames = request.form.get('nicknames')
+
+    if not category or not nicknames:
+        print("카테고리 또는 닉네임이 비어 있음")
+        return jsonify({"message": "카테고리와 닉네임을 입력해주세요.", "status": "error"}), 400
+
     nickname_list = [name.strip() for name in nicknames.split('/') if name.strip()]
+    print("추가할 닉네임:", nickname_list)
 
-    # 선택된 카테고리에 추가
     if category in categories:
-        categories[category].extend(nickname_list)
+        duplicate_nicknames = [name for name in nickname_list if name in categories[category]]
+        if duplicate_nicknames:
+            print("중복된 닉네임:", duplicate_nicknames)
+            return jsonify({"message": f"중복된 닉네임: {', '.join(duplicate_nicknames)}", "status": "error"}), 400
 
-        # 중복 제거
+        # 중복되지 않은 닉네임 추가
+        categories[category].extend(nickname_list)
         categories[category] = list(set(categories[category]))
 
-        # JSON 파일 업데이트
+        # JSON 파일 저장
         with open(JSON_PATH, 'w', encoding='utf-8') as f:
             json.dump(categories, f, ensure_ascii=False, indent=2)
 
-        # JSON 파일을 다시 읽어 categories 변수 업데이트
-        categories = load_categories()
+        return jsonify({"message": "데이터가 성공적으로 추가되었습니다.", "status": "success"}), 200
 
-        return redirect(url_for('home'))  # 메인 페이지로 리디렉션
-    else:
-        return "잘못된 카테고리 선택", 400
+    return jsonify({"message": "유효하지 않은 카테고리입니다.", "status": "error"}), 400
+
     
 @app.route('/delete_data', methods=['POST'])
 def delete_data():
