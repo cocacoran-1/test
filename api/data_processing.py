@@ -1,4 +1,8 @@
 import json
+import os
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # 현재 파일의 디렉토리
+JSON_PATH = os.path.join(CURRENT_DIR, 'categories.json')  # api 폴더 안에 categories.json 생성
 
 # 1. 원본 데이터 준비
 data = """
@@ -162,6 +166,37 @@ data = """
 참여 3번 / 연은
 참여 2번 / 멘헤라아닙니다
 
+참여 3번 / 키슨데왜혀안넣어
+참여 1번 / JK여고생비앙카
+참여1번 / 모으다잇다
+참여 2번 / 휴면001
+참여 3번 / 유키는유카타
+참여 1번 / 실비아피케
+참여 2번 / 금아이작아
+참여 3번 / 겨울에는찐빵
+참여 1번 / 여캐외모원탑레니
+참여 1번 / 닝기스님
+참여 1번 / 후드쓴미르
+참여 3번 / GETDDODAJE
+참여 1번 / 김릿훈
+참여 3번 / 갈치캔
+참여 3번 / 내가떠난후에도
+참여 3번 / llugeat
+참여 3번 / 흰스
+참여 3번 / reimari
+참여 1번 / 뒷골목에키온
+참여 1번 / 이웃집케네스
+참여 3번 / 사관후보섕에키온
+참여 1번 / 구원받지못한이안
+참여 2번 / 밤새널 
+참여 2번 / GuMMuG
+참여 1번 / 별부수는코코나
+참여 3번 / 따뜻한펩시
+참여 3번 / 바이옵스
+참여 1번 / 비앙카자매님
+참여 3번 / 키로의제자
+참여 1번 / 냥아치
+
 """
 
 lines = [line.strip() for line in data.split('\n') if line.strip()]
@@ -194,5 +229,5 @@ for pline in processed_lines:
         categories[cpart].append(nick)
 
 # 3. JSON 파일로 저장
-with open('categories.json', 'w', encoding='utf-8') as f:
+with open(JSON_PATH, 'w', encoding='utf-8') as f:
     json.dump(categories, f, ensure_ascii=False, indent=2)
