@@ -197,6 +197,9 @@ data = """
 참여 3번 / 키로의제자
 참여 1번 / 냥아치
 
+참여 1번 / 민초탕후루마라탕
+참여 2번 / 두식2
+
 """
 
 lines = [line.strip() for line in data.split('\n') if line.strip()]
