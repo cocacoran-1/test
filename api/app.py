@@ -1,5 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import random
 import json
 import os
@@ -10,6 +9,8 @@ app = Flask(
     template_folder="../templates",  # 템플릿 경로
     static_folder="../static"        # 정적 파일 경로
 )
+
+app.secret_key = "your_secret_key"  # 세션 암호화 키
 
 # JSON 파일 경로 설정
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -78,7 +79,17 @@ def generate_teams():
         for i, person in enumerate(selected_people[-remainder:]):
             teams[i % num_teams].append(person)
 
-    return render_template('teams.html', teams=teams, selected_category=selected_category)
+    # 남은 사람 리스트 저장
+    session['remaining_people'] = [p for p in chosen_nicknames if p not in selected_people]
+    session['current_teams'] = teams
+
+    return render_template(
+        'teams.html',
+        teams=teams,
+        selected_category=selected_category,
+        enumerate=enumerate  # Jinja2 템플릿에서 enumerate 사용 가능
+    )
+
 
 @app.route('/add_data', methods=['POST'])
 def add_data():
@@ -115,6 +126,33 @@ def add_data():
 
     return jsonify({"message": "유효하지 않은 카테고리입니다.", "status": "error"}), 400
 
+@app.route('/add_to_team', methods=['POST'])
+def add_to_team():
+    """
+    기존 팀에 추가로 사람을 뽑기
+    """
+    additional_count = int(request.form.get('additional_count', 0))
+
+    if 'current_teams' not in session or 'remaining_people' not in session:
+        return jsonify({"status": "error", "message": "기존 팀 정보가 없습니다. 먼저 추첨을 진행하세요."})
+
+    current_teams = session['current_teams']
+    remaining_people = session['remaining_people']
+
+    if not remaining_people:
+        return jsonify({"status": "error", "message": "추가로 뽑을 사람이 없습니다."})
+
+    additional_people = random.sample(remaining_people, min(additional_count, len(remaining_people)))
+
+    # 기존 팀에 추가 인원 분배
+    for i, person in enumerate(additional_people):
+        current_teams[i % len(current_teams)].append(person)
+
+    # 남은 사람 업데이트
+    session['remaining_people'] = list(set(remaining_people) - set(additional_people))
+    session['current_teams'] = current_teams
+
+    return jsonify({"status": "success", "message": f"{len(additional_people)}명이 추가되었습니다.", "teams": current_teams})
     
 @app.route('/delete_data', methods=['POST'])
 def delete_data():
@@ -139,6 +177,44 @@ def delete_data():
     else:
         return "잘못된 요청입니다.", 400
 
+@app.route('/update_team', methods=['POST'])
+def update_team():
+    """
+    특정 인원을 제거하고, 부족한 팀에 새로운 인원을 추가
+    """
+    remove_people = request.json.get('remove_people', [])  # 제거할 인원 리스트
+
+    # 기존 팀과 남은 사람 정보 가져오기
+    if 'current_teams' not in session or 'remaining_people' not in session:
+        return jsonify({"status": "error", "message": "기존 팀 정보가 없습니다. 먼저 추첨을 진행하세요."})
+
+    current_teams = session['current_teams']
+    remaining_people = session['remaining_people']
+
+    # 1. 팀에서 제거할 인원 삭제
+    updated_teams = []
+    for team in current_teams:
+        updated_team = [member for member in team if member not in remove_people]
+        updated_teams.append(updated_team)
+
+    # 2. 남은 사람 업데이트
+    updated_remaining_people = remaining_people + remove_people
+
+    # 3. 부족한 팀에 새로운 인원을 추가
+    for team in updated_teams:
+        while len(team) < 3 and updated_remaining_people:
+            new_member = updated_remaining_people.pop(0)  # 남은 사람에서 추가
+            team.append(new_member)
+
+    # 4. 세션 데이터 업데이트
+    session['current_teams'] = updated_teams
+    session['remaining_people'] = updated_remaining_people
+
+    return jsonify({
+        "status": "success",
+        "message": "팀이 성공적으로 업데이트되었습니다.",
+        "teams": updated_teams,
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -23,21 +23,116 @@
 <body class="bg-gray-100 text-gray-900">
     <div class="container mx-auto p-6">
         <h1 class="text-2xl font-bold mb-8 text-center">팀 구성 결과</h1>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {% for team in teams %}
-            <div class="bg-white p-4 rounded shadow">
-                <h2 class="font-bold text-lg mb-4 text-center">팀 {{ loop.index }}</h2>
-                <ul class="list-none">
-                    {% for member in team %}
-                    <li class="nickname">{{ member }}</li>
-                    {% endfor %}
-                </ul>
+        <form id="update-team-form" action="/update_team" method="POST">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for index, team in enumerate(teams) %}
+                <div class="bg-white p-4 rounded shadow">
+                    <h2 class="font-bold text-lg mb-4 text-center">팀 {{ index + 1 }}</h2>
+                    <ul class="list-none">
+                        {% for member in team %}
+                        <li class="nickname">
+                            <label>
+                                <input type="checkbox" name="remove_people" value="{{ member }}"> {{ member }}
+                            </label>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
+            <div class="text-center mt-6">
+                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    업데이트
+                </button>
+            </div>
+        </form>
         <div class="mt-8 text-center">
             <a href="{{ url_for('home') }}" class="bg-blue-500 text-white px-4 py-2 rounded">처음으로</a>
         </div>
     </div>
+    
+    <script>
+       document.getElementById('update-team-form').addEventListener('submit', function (event) {
+    event.preventDefault(); // 기본 폼 동작 방지
+
+    const formData = new FormData(this);
+    const removePeople = Array.from(formData.getAll('remove_people')); // 체크된 제거 인원 목록
+
+    fetch('/update_team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ remove_people: removePeople }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            const updatedTeams = data.teams;
+
+            // 팀 목록을 동적으로 업데이트
+            updateTeamsUI(updatedTeams);
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("팀 업데이트 중 오류가 발생했습니다.");
+    });
+});
+
+// UI 업데이트 함수
+function updateTeamsUI(updatedTeams) {
+    const teamListContainer = document.querySelector('.grid');
+    teamListContainer.innerHTML = ''; // 기존 팀 삭제
+
+    updatedTeams.forEach((team, index) => {
+        const teamDiv = document.createElement('div');
+        teamDiv.classList.add('bg-white', 'p-4', 'rounded', 'shadow');
+        teamDiv.innerHTML = `
+            <h2 class="font-bold text-lg mb-4 text-center">팀 ${index + 1}</h2>
+            <ul class="list-none">
+                ${team.map(member => `
+                    <li class="nickname">
+                        <label>
+                            <input type="checkbox" name="remove_people" value="${member}"> ${member}
+                        </label>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+        teamListContainer.appendChild(teamDiv);
+    });
+}
+
+        </script>
+           
+   
+    
+    <script>
+    document.getElementById('add-to-team-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+    
+        const formData = new FormData(this);
+    
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                location.reload(); // 새로고침으로 팀 정보 업데이트
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("추가 뽑기 중 오류가 발생했습니다.");
+        });
+    });
+    </script>
 </body>
 </html>
