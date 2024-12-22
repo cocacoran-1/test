@@ -195,6 +195,7 @@ data = """
 참여 1번 / 그란트리스모
 참여 1번 / 냉연
 참여 3번 / 민식박fam
+참여 3번 / 허츄러스
 """
 
 lines = [line.strip() for line in data.split('\n') if line.strip()]
