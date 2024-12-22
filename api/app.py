@@ -216,6 +216,7 @@ def update_team():
         "teams": updated_teams,
     })
 
+
 @app.route('/save_team', methods=['POST'])
 def save_team():
     try:
@@ -281,29 +282,30 @@ def saved_teams():
 
 @app.route('/load_team/<title>', methods=['GET'])
 def load_team(title):
-    try:
-        save_path = os.path.join(BASE_DIR, 'saved_teams.json')
-        print(f"[DEBUG] 저장된 팀 경로: {save_path}")
+    save_path = os.path.join(BASE_DIR, 'saved_teams.json')
+    print(f"[DEBUG] 불러오기 요청 제목: {title}")
+    print(f"[DEBUG] 저장된 파일 경로: {save_path}")
 
-        if not os.path.exists(save_path):
-            return jsonify({"status": "error", "message": "저장된 데이터가 없습니다."}), 404
+    # 파일 존재 여부 확인
+    if not os.path.exists(save_path):
+        print("[ERROR] 저장된 팀 파일이 없습니다.")
+        return jsonify({"status": "error", "message": "저장된 데이터가 없습니다."}), 404
 
-        with open(save_path, 'r', encoding='utf-8') as f:
-            saved_teams = json.load(f)
-            print(f"[DEBUG] 불러오기 전 데이터: {saved_teams}")
+    # JSON 파일 읽기
+    with open(save_path, 'r', encoding='utf-8') as f:
+        saved_teams = json.load(f)
+        print(f"[DEBUG] 저장된 팀 목록: {list(saved_teams.keys())}")
 
-        if title not in saved_teams:
-            return jsonify({"status": "error", "message": "존재하지 않는 제목입니다."}), 404
+    # 요청 제목 확인
+    if title not in saved_teams:
+        print(f"[ERROR] 요청된 제목 '{title}'이 저장된 데이터에 없습니다.")
+        return jsonify({"status": "error", "message": "존재하지 않는 제목입니다."}), 404
 
-        session['current_teams'] = saved_teams[title]['teams']
-        session['remaining_people'] = saved_teams[title]['remaining_people']
+    # 세션 데이터 설정
+    session['current_teams'] = saved_teams[title]['teams']
+    session['remaining_people'] = saved_teams[title]['remaining_people']
 
-        print(f"[DEBUG] 불러온 데이터: {saved_teams[title]}")
-
-        return render_template('teams.html', teams=session['current_teams'], enumerate=enumerate)
-    except Exception as e:
-        print(f"[ERROR] 불러오기 중 오류 발생: {str(e)}")
-        return jsonify({"status": "error", "message": "불러오기 중 오류가 발생했습니다."}), 500
+    return render_template('teams.html', teams=session['current_teams'], enumerate=enumerate)
 
 
 @app.route('/delete_team/<title>', methods=['DELETE'])
