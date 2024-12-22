@@ -134,5 +134,103 @@ function updateTeamsUI(updatedTeams) {
         });
     });
     </script>
+
+<div class="mt-8">
+    <h2 class="text-xl font-bold mb-4">팀 저장</h2>
+    <form id="save-team-form" action="/save_team" method="POST" class="space-y-4">
+        <div>
+            <label for="title" class="block text-sm font-medium">저장할 제목</label>
+            <input type="text" name="title" id="title" class="border border-gray-300 rounded p-2 w-full" required>
+        </div>
+        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            팀 저장
+        </button>
+    </form>
+
+    <div class="mt-8">
+        <h3 class="text-lg font-bold mb-4">저장된 팀 불러오기/삭제</h3>
+        <ul id="saved-teams-list" class="list-disc pl-6">
+            <!-- 저장된 팀 리스트는 JavaScript로 동적으로 추가 -->
+        </ul>
+    </div>
+</div>
+
+<script>
+    // 팀 저장 처리
+    document.getElementById('save-team-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+        fetch('/save_team', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.status === 'success') {
+                loadSavedTeams();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("저장 중 오류가 발생했습니다.");
+        });
+    });
+
+    // 저장된 팀 목록 로드
+function loadSavedTeams() {
+    fetch('/saved_teams')
+        .then(response => response.json())
+        .then(data => {
+            const list = document.getElementById('saved-teams-list');
+            list.innerHTML = ''; // 기존 목록 삭제
+
+            if (!data.teams || data.teams.length === 0) {
+                list.innerHTML = '<li>저장된 팀이 없습니다.</li>';
+                return;
+            }
+
+            data.teams.forEach(title => {
+                const li = document.createElement('li');
+                li.textContent = title;
+
+                const loadButton = document.createElement('button');
+                loadButton.textContent = '불러오기';
+                loadButton.className = 'ml-2 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600';
+                loadButton.onclick = () => {
+                    location.href = `/load_team/${title}`;
+                };
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '삭제';
+                deleteButton.className = 'ml-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600';
+                deleteButton.onclick = () => {
+                    fetch(`/delete_team/${title}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(deleteData => {
+                            alert(deleteData.message);
+                            if (deleteData.status === 'success') {
+                                loadSavedTeams(); // 저장된 리스트 갱신
+                            }
+                        });
+                };
+
+                li.appendChild(loadButton);
+                li.appendChild(deleteButton);
+                list.appendChild(li);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// 페이지 로드 시 저장된 팀 목록 불러오기
+document.addEventListener('DOMContentLoaded', loadSavedTeams);
+
+</script>
+
+
 </body>
 </html>

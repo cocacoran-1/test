@@ -216,5 +216,121 @@ def update_team():
         "teams": updated_teams,
     })
 
+@app.route('/save_team', methods=['POST'])
+def save_team():
+    try:
+        # 제목 확인
+        title = request.form.get('title')
+        if not title:
+            return jsonify({"status": "error", "message": "제목을 입력해주세요."}), 400
+
+        # 저장 경로
+        save_path = os.path.join(BASE_DIR, 'saved_teams.json')
+
+        # JSON 파일 초기화 또는 읽기
+        if not os.path.exists(save_path):
+            with open(save_path, 'w', encoding='utf-8') as f:
+                json.dump({}, f, ensure_ascii=False, indent=2)
+
+        with open(save_path, 'r', encoding='utf-8') as f:
+            saved_teams = json.load(f)
+
+        # `saved_teams`가 딕셔너리인지 확인
+        if not isinstance(saved_teams, dict):
+            saved_teams = {}
+
+        # 중복 제목 확인
+        if title in saved_teams:
+            return jsonify({"status": "error", "message": "이미 존재하는 제목입니다."}), 400
+
+        # 데이터 저장
+        saved_teams[title] = {
+            "teams": session.get('current_teams', []),
+            "remaining_people": session.get('remaining_people', [])
+        }
+
+        # JSON 파일 쓰기
+        with open(save_path, 'w', encoding='utf-8') as f:
+            json.dump(saved_teams, f, ensure_ascii=False, indent=2)
+
+        return jsonify({"status": "success", "message": f"'{title}'로 저장되었습니다."}), 200
+    except Exception as e:
+        print(f"[ERROR] 저장 중 오류 발생: {str(e)}")
+        return jsonify({"status": "error", "message": "저장 중 오류가 발생했습니다."}), 500
+        
+
+
+@app.route('/saved_teams', methods=['GET'])
+def saved_teams():
+    try:
+        save_path = os.path.join(BASE_DIR, 'saved_teams.json')
+        print(f"[DEBUG] 저장된 팀 경로: {save_path}")
+
+        if not os.path.exists(save_path):
+            print("[DEBUG] 저장된 팀 파일이 없습니다.")
+            return jsonify({"teams": []})  # 저장된 팀이 없으면 빈 리스트 반환
+
+        with open(save_path, 'r', encoding='utf-8') as f:
+            saved_teams = json.load(f)
+            print(f"[DEBUG] 저장된 팀 데이터: {saved_teams}")
+
+        return jsonify({"teams": list(saved_teams.keys())})  # 제목 목록 반환
+    except Exception as e:
+        print(f"[ERROR] 저장된 팀 로드 중 오류 발생: {str(e)}")
+        return jsonify({"teams": []}), 500
+
+@app.route('/load_team/<title>', methods=['GET'])
+def load_team(title):
+    try:
+        save_path = os.path.join(BASE_DIR, 'saved_teams.json')
+        print(f"[DEBUG] 저장된 팀 경로: {save_path}")
+
+        if not os.path.exists(save_path):
+            return jsonify({"status": "error", "message": "저장된 데이터가 없습니다."}), 404
+
+        with open(save_path, 'r', encoding='utf-8') as f:
+            saved_teams = json.load(f)
+            print(f"[DEBUG] 불러오기 전 데이터: {saved_teams}")
+
+        if title not in saved_teams:
+            return jsonify({"status": "error", "message": "존재하지 않는 제목입니다."}), 404
+
+        session['current_teams'] = saved_teams[title]['teams']
+        session['remaining_people'] = saved_teams[title]['remaining_people']
+
+        print(f"[DEBUG] 불러온 데이터: {saved_teams[title]}")
+
+        return render_template('teams.html', teams=session['current_teams'], enumerate=enumerate)
+    except Exception as e:
+        print(f"[ERROR] 불러오기 중 오류 발생: {str(e)}")
+        return jsonify({"status": "error", "message": "불러오기 중 오류가 발생했습니다."}), 500
+
+
+@app.route('/delete_team/<title>', methods=['DELETE'])
+def delete_team(title):
+    """
+    제목에 해당하는 팀 데이터를 삭제
+    """
+    save_path = os.path.join(BASE_DIR, 'saved_teams.json')
+    if not os.path.exists(save_path):
+        return jsonify({"status": "error", "message": "저장된 데이터가 없습니다."}), 404
+
+    with open(save_path, 'r', encoding='utf-8') as f:
+        saved_teams = json.load(f)
+
+    if title not in saved_teams:
+        return jsonify({"status": "error", "message": "존재하지 않는 제목입니다."}), 404
+
+    # 데이터 삭제
+    del saved_teams[title]
+
+    # JSON 파일 업데이트
+    with open(save_path, 'w', encoding='utf-8') as f:
+        json.dump(saved_teams, f, ensure_ascii=False, indent=2)
+
+    return jsonify({"status": "success", "message": f"'{title}'이 삭제되었습니다."})
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
