@@ -44,7 +44,6 @@ data = """
 참여 2번 / 네온아잘좀하자
 참여 3번 / 생각없이하는중
 참여 3번 / stellarcium
-참여 2번 / 아비게일포탈구멍
 참여 1번 / 죽이면그만이야
 참여 3번 / 주라미
 참여 3번 / sorasakihina
@@ -195,6 +194,7 @@ data = """
 참여 1번 / 이거잼냐
 참여 1번 / 그란트리스모
 참여 1번 / 냉연
+참여 3번 / 민식박fam
 """
 
 lines = [line.strip() for line in data.split('\n') if line.strip()]
