@@ -193,14 +193,11 @@
                 .then(response => response.json())
                 .then(data => {
                     const list = document.getElementById('saved-teams-list');
-                    list.innerHTML = ''; // 기존 목록 삭제
-
-                    if (!data.teams || data.teams.length === 0) {
-                        list.innerHTML = '<li>저장된 팀이 없습니다.</li>';
-                        return;
-                    }
+                    list.innerHTML = '';
 
                     data.teams.forEach(title => {
+                        const encodedTitle = encodeURIComponent(title);
+
                         const li = document.createElement('li');
                         li.textContent = title;
 
@@ -208,7 +205,6 @@
                         loadButton.textContent = '불러오기';
                         loadButton.className = 'ml-2 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600';
                         loadButton.onclick = () => {
-                            const encodedTitle = encodeURIComponent(title);  // 제목 인코딩
                             location.href = `/load_team/${encodedTitle}`;
                         };
 
@@ -216,13 +212,12 @@
                         deleteButton.textContent = '삭제';
                         deleteButton.className = 'ml-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600';
                         deleteButton.onclick = () => {
-                            const encodedTitle = encodeURIComponent(title);  // 제목 인코딩
                             fetch(`/delete_team/${encodedTitle}`, { method: 'DELETE' })
                                 .then(response => response.json())
                                 .then(deleteData => {
                                     alert(deleteData.message);
                                     if (deleteData.status === 'success') {
-                                        loadSavedTeams(); // 저장된 리스트 갱신
+                                        loadSavedTeams();
                                     }
                                 });
                         };
@@ -231,10 +226,8 @@
                         li.appendChild(deleteButton);
                         list.appendChild(li);
                     });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
                 });
+
         }
 
         // 페이지 로드 시 저장된 팀 목록 불러오기

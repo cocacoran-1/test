@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from urllib.parse import unquote
+from urllib.parse import quote
 import random
 import json
 import os
@@ -225,33 +226,36 @@ def update_team():
 @app.route('/save_team', methods=['POST'])
 def save_team():
     try:
+        # 요청 데이터 확인
         title = request.form.get('title')
         if not title:
             return jsonify({"status": "error", "message": "제목을 입력해주세요."}), 400
 
-        save_path = os.path.join(BASE_DIR, 'saved_teams.json')
+        # 제목을 URL-safe 형식으로 인코딩
+        encoded_title = quote(title)
 
-        # 파일이 없으면 생성
+        # 경로 확인
+        save_path = os.path.join(BASE_DIR, 'saved_teams.json')
         if not os.path.exists(save_path):
-            with open(save_path, 'w', encoding='utf-8') as f:  # UTF-8로 빈 파일 생성
+            with open(save_path, 'w', encoding='utf-8') as f:
                 json.dump({}, f, ensure_ascii=False, indent=2)
 
         # JSON 파일 읽기
-        with open(save_path, 'r', encoding='utf-8') as f:  # UTF-8로 읽기
+        with open(save_path, 'r', encoding='utf-8') as f:
             saved_teams = json.load(f)
 
         # 중복 제목 확인
-        if title in saved_teams:
+        if encoded_title in saved_teams:
             return jsonify({"status": "error", "message": "이미 존재하는 제목입니다."}), 400
 
         # 데이터 저장
-        saved_teams[title] = {
+        saved_teams[encoded_title] = {
             "teams": session.get('current_teams', []),
             "remaining_people": session.get('remaining_people', [])
         }
 
         # JSON 파일 쓰기
-        with open(save_path, 'w', encoding='utf-8') as f:  # UTF-8로 쓰기
+        with open(save_path, 'w', encoding='utf-8') as f:
             json.dump(saved_teams, f, ensure_ascii=False, indent=2)
 
         return jsonify({"status": "success", "message": f"'{title}'로 저장되었습니다."}), 200
@@ -259,47 +263,60 @@ def save_team():
         print(f"저장 중 오류 발생: {str(e)}")
         return jsonify({"status": "error", "message": "저장 중 오류가 발생했습니다."}), 500
 
-
-
 @app.route('/saved_teams', methods=['GET'])
 def saved_teams():
+    """
+    저장된 팀 제목 목록 반환
+    """
     save_path = os.path.join(BASE_DIR, 'saved_teams.json')
     if not os.path.exists(save_path):
         return jsonify({"teams": []})  # 저장된 팀이 없으면 빈 리스트 반환
 
-    with open(save_path, 'r', encoding='utf-8') as f:  # UTF-8로 읽기
+    with open(save_path, 'r', encoding='utf-8') as f:
         saved_teams = json.load(f)
 
-    return jsonify({"teams": list(saved_teams.keys())})  # 제목 목록 반환
+    # 제목을 URL-safe 형식으로 반환
+    return jsonify({"teams": [unquote(title) for title in saved_teams.keys()]})
 
-
-@app.route('/load_team/<title>', methods=['GET'])
-def load_team(title):
+@app.route('/load_team/<encoded_title>', methods=['GET'])
+def load_team(encoded_title):
+    """
+    제목에 해당하는 팀 데이터를 불러와 세션에 설정
+    """
     save_path = os.path.join(BASE_DIR, 'saved_teams.json')
     if not os.path.exists(save_path):
         return jsonify({"status": "error", "message": "저장된 데이터가 없습니다."}), 404
 
-    with open(save_path, 'r', encoding='utf-8') as f:  # UTF-8로 읽기
+    with open(save_path, 'r', encoding='utf-8') as f:
         saved_teams = json.load(f)
+
+    # 제목 디코딩
+    title = unquote(encoded_title)
 
     if title not in saved_teams:
         return jsonify({"status": "error", "message": "존재하지 않는 제목입니다."}), 404
 
+    # 세션에 팀 구성과 남은 사람 정보 설정
     session['current_teams'] = saved_teams[title]['teams']
     session['remaining_people'] = saved_teams[title]['remaining_people']
 
     return render_template('teams.html', teams=session['current_teams'], enumerate=enumerate)
 
 
-
-@app.route('/delete_team/<title>', methods=['DELETE'])
-def delete_team(title):
+@app.route('/delete_team/<encoded_title>', methods=['DELETE'])
+def delete_team(encoded_title):
+    """
+    제목에 해당하는 팀 데이터를 삭제
+    """
     save_path = os.path.join(BASE_DIR, 'saved_teams.json')
     if not os.path.exists(save_path):
         return jsonify({"status": "error", "message": "저장된 데이터가 없습니다."}), 404
 
-    with open(save_path, 'r', encoding='utf-8') as f:  # UTF-8로 읽기
+    with open(save_path, 'r', encoding='utf-8') as f:
         saved_teams = json.load(f)
+
+    # 제목 디코딩
+    title = unquote(encoded_title)
 
     if title not in saved_teams:
         return jsonify({"status": "error", "message": "존재하지 않는 제목입니다."}), 404
@@ -307,12 +324,11 @@ def delete_team(title):
     # 데이터 삭제
     del saved_teams[title]
 
-    with open(save_path, 'w', encoding='utf-8') as f:  # UTF-8로 쓰기
+    # JSON 파일 업데이트
+    with open(save_path, 'w', encoding='utf-8') as f:
         json.dump(saved_teams, f, ensure_ascii=False, indent=2)
 
     return jsonify({"status": "success", "message": f"'{title}'이 삭제되었습니다."})
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
