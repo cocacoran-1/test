@@ -60,34 +60,86 @@
         </div>
     </div>
 
+    <div id="update-overlay" class="overlay hidden">
+        <div class="image-container">
+            <img src="{{ url_for('static', filename='images/sera.png') }}" alt="업데이트 이미지" id="updateImage">
+        </div>
+    </div>
+    <style>
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 50;
+            display: none;
+        }
+
+        .overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-container {
+            width: 70%;
+            /* 이미지 크기 확대 */
+            max-width: 1024px;
+            /* 최대 너비 설정 */
+            height: auto;
+            /* 비율 유지 */
+        }
+
+        .image-container img {
+            width: 100%;
+            /* 이미지가 컨테이너 크기에 맞게 조정 */
+            height: auto;
+            /* 비율 유지 */
+            object-fit: contain;
+            /* 비율 유지하며 컨테이너 크기에 맞춤 */
+            border-radius: 10px;
+            /* 모서리를 부드럽게 (선택사항) */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            /* 그림자 추가 (선택사항) */
+        }
+    </style>
     <script>
         document.getElementById('update-team-form').addEventListener('submit', function (event) {
             event.preventDefault(); // 기본 폼 동작 방지
 
-            const formData = new FormData(this);
-            const removePeople = Array.from(formData.getAll('remove_people')); // 체크된 제거 인원 목록
+            // 오버레이 표시
+            const updateOverlay = document.getElementById('update-overlay');
+            updateOverlay.classList.add('show');
 
-            fetch('/update_team', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ remove_people: removePeople }),
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert(data.message);
-                        const updatedTeams = data.teams;
+            // 1.5초 후 업데이트 요청 실행
+            setTimeout(() => {
+                const formData = new FormData(this);
+                const removePeople = Array.from(formData.getAll('remove_people')); // 체크된 제거 인원 목록
 
-                        // 팀 목록을 동적으로 업데이트
-                        updateTeamsUI(updatedTeams);
-                    } else {
-                        alert(data.message);
-                    }
+                fetch('/update_team', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ remove_people: removePeople }),
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("팀 업데이트 중 오류가 발생했습니다.");
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            updateTeamsUI(data.teams); // 성공 메시지 제거
+                        } else {
+                            alert(data.message); // 실패 시만 메시지 표시
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert("팀 업데이트 중 오류가 발생했습니다.");
+                    })
+                    .finally(() => {
+                        // 오버레이 숨기기
+                        updateOverlay.classList.remove('show');
+                    });
+            }, 1500); // 페이드아웃 애니메이션 시간
         });
 
         // UI 업데이트 함수
@@ -113,7 +165,6 @@
                 teamListContainer.appendChild(teamDiv);
             });
         }
-
     </script>
 
 
