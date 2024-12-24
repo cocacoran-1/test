@@ -41,7 +41,10 @@
                         {% for member in team %}
                         <li class="nickname">
                             <label>
-                                <input type="checkbox" name="remove_people" value="{{ member }}"> {{ member }}
+                                <input type="checkbox" name="remove_people" value="{{ member }}">
+                                <a href="https://dak.gg/er/players/{{ member }}" target="_blank">
+                                    {{ member }}
+                                </a>
                             </label>
                         </li>
                         {% endfor %}
@@ -59,6 +62,24 @@
             <a href="{{ url_for('home') }}" class="bg-blue-500 text-white px-4 py-2 rounded">처음으로</a>
         </div>
     </div>
+    <style>
+        a {
+            text-decoration: none;
+            color: #2563eb;
+            margin-left: 0.5rem;
+            /* 체크박스와 링크 간의 간격 */
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #1d4ed8;
+        }
+
+        .nickname label {
+            display: flex;
+            align-items: center;
+        }
+    </style>
 
     <div id="update-overlay" class="overlay hidden">
         <div class="image-container">
@@ -142,7 +163,6 @@
             }, 1500); // 페이드아웃 애니메이션 시간
         });
 
-        // UI 업데이트 함수
         function updateTeamsUI(updatedTeams) {
             const teamListContainer = document.querySelector('.grid');
             teamListContainer.innerHTML = ''; // 기존 팀 삭제
@@ -156,7 +176,10 @@
                 ${team.map(member => `
                     <li class="nickname">
                         <label>
-                            <input type="checkbox" name="remove_people" value="${member}"> ${member}
+                            <input type="checkbox" name="remove_people" value="${member}">
+                            <a href="https://dak.gg/er/players/${member}" target="_blank" class="text-blue-500 hover:underline">
+                                ${member}
+                            </a>
                         </label>
                     </li>
                 `).join('')}
@@ -165,6 +188,7 @@
                 teamListContainer.appendChild(teamDiv);
             });
         }
+
     </script>
 
 
