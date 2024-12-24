@@ -3,6 +3,10 @@ from urllib.parse import unquote
 import random
 import json
 import os
+import sys
+sys.stdin.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 
 # Flask 앱 초기화
 app = Flask(
